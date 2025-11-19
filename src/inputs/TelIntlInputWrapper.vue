@@ -86,26 +86,60 @@ watch(() => props.context.value, (newValue) => {
 // Handle input change
 const handleInput = (event) => {
   if (iti) {
-    // Get the full international number
-    const fullNumber = iti.getNumber()
-    const isValid = iti.isValidNumber()
+    // Get the actual input value (what user typed)
+    const inputValue = event.target.value.replace(/\D/g, '') // Remove non-digits
     
-    // Update FormKit context
-    props.context.isValidPhone = isValid
-    
-    // Update FormKit node value
-    props.context.node.input(fullNumber)
+    // Only process if there's actual numeric input
+    if (inputValue && inputValue.length > 0) {
+      // Get the full international number
+      const fullNumber = iti.getNumber()
+      
+      // Check if it's valid - but only if there's enough digits
+      const isValid = inputValue.length >= 3 ? iti.isValidNumber() : false
+      
+      // Update FormKit context
+      props.context.isValidPhone = isValid
+      
+      // Only send the number if it's not just zeros or placeholder
+      // Also check that it has actual non-zero digits
+      const hasNonZeroDigits = fullNumber.replace(/\D/g, '').replace(/0/g, '').length > 0
+      
+      if (fullNumber && !fullNumber.match(/^[\+\s\-\(\)]*0+$/) && hasNonZeroDigits) {
+        props.context.node.input(fullNumber)
+      } else {
+        props.context.node.input('')
+      }
+    } else {
+      // Empty input
+      props.context.isValidPhone = false
+      props.context.node.input('')
+    }
   }
 }
 
 // Handle blur event
 const handleBlur = (event) => {
   if (iti) {
-    const fullNumber = iti.getNumber()
-    const isValid = iti.isValidNumber()
+    const inputValue = event.target.value.replace(/\D/g, '')
     
-    props.context.isValidPhone = isValid
-    props.context.node.input(fullNumber)
+    if (inputValue && inputValue.length > 0) {
+      const fullNumber = iti.getNumber()
+      const isValid = iti.isValidNumber()
+      
+      props.context.isValidPhone = isValid
+      
+      // Only send valid numbers, not zeros
+      const hasNonZeroDigits = fullNumber.replace(/\D/g, '').replace(/0/g, '').length > 0
+      
+      if (fullNumber && !fullNumber.match(/^[\+\s\-\(\)]*0+$/) && hasNonZeroDigits) {
+        props.context.node.input(fullNumber)
+      } else {
+        props.context.node.input('')
+      }
+    } else {
+      props.context.isValidPhone = false
+      props.context.node.input('')
+    }
     
     // Trigger FormKit blur handler
     if (props.context.handlers.blur) {
@@ -116,15 +150,22 @@ const handleBlur = (event) => {
 
 // Handle country change
 const handleCountryChange = () => {
-  if (iti) {
-    const fullNumber = iti.getNumber()
-    const isValid = iti.isValidNumber()
+  if (iti && telInputRef.value) {
+    const inputValue = telInputRef.value.value.replace(/\D/g, '')
     
-    props.context.isValidPhone = isValid
-    
-    // Only update if there's a number
-    if (fullNumber) {
-      props.context.node.input(fullNumber)
+    // Only update if there's actual numeric input
+    if (inputValue && inputValue.length > 0) {
+      const fullNumber = iti.getNumber()
+      const isValid = iti.isValidNumber()
+      
+      props.context.isValidPhone = isValid
+      
+      // Only send valid numbers, not zeros
+      const hasNonZeroDigits = fullNumber.replace(/\D/g, '').replace(/0/g, '').length > 0
+      
+      if (fullNumber && !fullNumber.match(/^[\+\s\-\(\)]*0+$/) && hasNonZeroDigits) {
+        props.context.node.input(fullNumber)
+      }
     }
   }
 }
